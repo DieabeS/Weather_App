@@ -14,9 +14,9 @@ class _ApiClient implements ApiClient {
   String? baseUrl;
 
   @override
-  Future<WeatherResponse> getWeather({required id, required appid}) async {
+  Future<WeatherResponse> getWeather({required city, required appid}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'id': id, r'appid': appid};
+    final queryParameters = <String, dynamic>{r'q': city, r'appid': appid};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(

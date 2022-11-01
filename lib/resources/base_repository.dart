@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:weather_quiz_app/models/base_response/base_response.dart';
+import 'package:weather_app/models/base_response/base_response.dart';
 
 abstract class BaseRepository {
   Future<BaseResponse<T>> catchError<T>(e) async {

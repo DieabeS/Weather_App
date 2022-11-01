@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:weather_quiz_app/models/weather_object/weather_object.dart';
+import 'package:weather_app/models/weather_object/weather_object.dart';
+import "package:weather_app/extensions/string_extension.dart";
 
 class WeatherDetailsScreen extends StatefulWidget {
   final String date;
   final List<WeatherObject> dayWeather;
+  final String city;
+  final String index;
 
   const WeatherDetailsScreen({
     Key? key,
     required this.date,
     required this.dayWeather,
+    required this.city,
+    required this.index,
+
   }) : super(key: key);
 
   @override
@@ -112,14 +118,20 @@ class _WeatherDetailsScreenState extends State<WeatherDetailsScreen> {
                             ),
                             const Spacer(),
                             Row(
-                              children: const [
-                                Icon(
+                              children: [
+                                const Icon(
                                   Icons.location_on,
                                   color: Colors.white,
                                 ),
-                                Text(
-                                  'Dubai',
-                                  style: TextStyle(fontSize: (30), color: Colors.white),
+                                Hero(
+                                  tag: widget.city + widget.index,
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: Text(
+                                      widget.city.capitalize(),
+                                      style: const TextStyle(fontSize: (30), color: Colors.white),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

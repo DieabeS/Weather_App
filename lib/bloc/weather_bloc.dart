@@ -1,12 +1,10 @@
-import 'dart:convert';
 
 import 'package:intl/intl.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:weather_quiz_app/managers/shared_prefernces_manager.dart';
-import 'package:weather_quiz_app/models/base_response/base_response.dart';
-import 'package:weather_quiz_app/models/weather_object/weather_object.dart';
-import 'package:weather_quiz_app/models/weather_response/weather_response.dart';
-import 'package:weather_quiz_app/resources/repository.dart';
+import 'package:weather_app/models/base_response/base_response.dart';
+import 'package:weather_app/models/weather_object/weather_object.dart';
+import 'package:weather_app/models/weather_response/weather_response.dart';
+import 'package:weather_app/resources/repository.dart';
 
 import 'base_bloc.dart';
 
@@ -17,18 +15,18 @@ class WeatherBloc extends BaseBloc {
     return _instance!;
   }
 
-  BehaviorSubject<WeatherResponse>? _weatherResponse;
+  BehaviorSubject<WeatherResponse?>? _weatherResponse;
 
   BehaviorSubject<List>? _dateList;
   BehaviorSubject<List>? _tempList;
 
-  ValueStream<WeatherResponse>? get weatherResponse => _weatherResponse?.stream;
+  ValueStream<WeatherResponse?>? get weatherResponse => _weatherResponse?.stream;
   ValueStream<List>? get dateList => _dateList?.stream;
   ValueStream<List>? get tempList => _tempList?.stream;
 
   @override
   void init() {
-    _weatherResponse = BehaviorSubject<WeatherResponse>();
+    _weatherResponse = BehaviorSubject<WeatherResponse?>();
     _dateList = BehaviorSubject<List>();
     _tempList = BehaviorSubject<List>();
   }
@@ -41,13 +39,15 @@ class WeatherBloc extends BaseBloc {
   }
 
   Future<String?> getWeather(
-      {String? appid, String? id, required bool fromApi, WeatherResponse? weatherResponse}) async {
+      {String? appid, String? city, required bool fromApi, WeatherResponse? weatherResponse}) async {
     if (fromApi) {
+        _weatherResponse?.sink.add(null);
+
       BaseResponse<WeatherResponse> response;
       var dates = [];
       var temps = [];
 
-      response = await Repository.instance.getWeather(appid: appid!, id: id!);
+      response = await Repository.instance.getWeather(appid: appid!, city: city!);
       if (response.isSucceed) {
         _weatherResponse?.sink.add(response.data!);
 
@@ -60,10 +60,7 @@ class WeatherBloc extends BaseBloc {
         _dateList!.sink.add(dates);
         _tempList!.sink.add(temps);
 
-        SharedPreferencesManager.instance.sharedPreferences
-            .setString('weatherResponse', jsonEncode(response.data?.toJson()));
-        SharedPreferencesManager.instance.sharedPreferences
-            .setString('date', DateFormat().add_yMMMMEEEEd().format(DateTime.parse(DateTime.now().toString())));
+        
       } else {
         _weatherResponse?.sink.addError(response.error!);
       }
@@ -88,11 +85,11 @@ class WeatherBloc extends BaseBloc {
   List<WeatherObject> getDayWeather(String date) {
     DateTime selectedDay = DateTime.parse(date);
     List<WeatherObject> dayWeather = [];
-    for (int i = 0; i < weatherResponse!.value.list.length; i++) {
-      DateTime tempDate = DateTime.parse(weatherResponse!.value.list[i].dtTxt);
+    for (int i = 0; i < weatherResponse!.value!.list.length; i++) {
+      DateTime tempDate = DateTime.parse(weatherResponse!.value!.list[i].dtTxt);
 
       if (tempDate.year == selectedDay.year && tempDate.month == selectedDay.month && tempDate.day == selectedDay.day) {
-        dayWeather.add(weatherResponse!.value.list[i]);
+        dayWeather.add(weatherResponse!.value!.list[i]);
       }
     }
     return dayWeather;

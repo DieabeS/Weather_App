@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:weather_quiz_app/bloc/weather_bloc.dart';
-import 'package:weather_quiz_app/managers/shared_prefernces_manager.dart';
-import 'package:weather_quiz_app/models/weather_response/weather_response.dart';
-import 'package:weather_quiz_app/ui/screens/weather_details_screen.dart';
+import 'package:weather_app/bloc/weather_bloc.dart';
+import 'package:weather_app/models/weather_response/weather_response.dart';
+import 'package:weather_app/ui/screens/weather_details_screen.dart';
+import "package:weather_app/extensions/string_extension.dart";
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({Key? key}) : super(key: key);
@@ -16,19 +13,15 @@ class WeatherScreen extends StatefulWidget {
 
 class _WeatherScreenState extends State<WeatherScreen> {
   TextStyle textStyle() => const TextStyle(fontSize: 18, color: Colors.white);
+  final TextEditingController _controller = TextEditingController();
+  String city = '';
   @override
   void initState() {
     super.initState();
+    city = 'Dubai';
     WeatherBloc.instance.init();
-    var date = SharedPreferencesManager.instance.sharedPreferences.getString('date');
-    var data = SharedPreferencesManager.instance.sharedPreferences.getString('weatherResponse');
-
-    if (DateFormat().add_yMMMMEEEEd().format(DateTime.parse(DateTime.now().toString())) != date) {
-      WeatherBloc.instance.getWeather(appid: '8925480114759bf525fdade7a857b52c', id: '292223', fromApi: true);
-    } else {
-      WeatherResponse weatherResponse = WeatherResponse.fromJson(jsonDecode(data.toString()));
-      WeatherBloc.instance.getWeather(fromApi: false, weatherResponse: weatherResponse);
-    }
+    WeatherBloc.instance
+        .getWeather(appid: '8925480114759bf525fdade7a857b52c', city: city.isEmpty ? 'dubai' : city, fromApi: true);
   }
 
   @override
@@ -44,12 +37,50 @@ class _WeatherScreenState extends State<WeatherScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Forecast Report',
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const SizedBox(
+              height: 5,
+            ),
+            TextField(
+              controller: _controller,
+              onSubmitted: (value) {
+                WeatherBloc.instance.getWeather(appid: '8925480114759bf525fdade7a857b52c', city: value, fromApi: true);
+                city = value;
+                _controller.text = '';
+              },
+              style: const TextStyle(
+                color: Colors.black,
+              ),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 5),
+                fillColor: Colors.white.withOpacity(0.5),
+                filled: true,
+                suffixIcon: const Icon(
+                  Icons.search,
+                  color: Colors.white,
+                ),
+                hintStyle: const TextStyle(color: Colors.black),
+                hintText: 'Search'.toUpperCase(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.white),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      body: StreamBuilder<WeatherResponse>(
+      body: StreamBuilder<WeatherResponse?>(
           stream: WeatherBloc.instance.weatherResponse,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
@@ -65,7 +96,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                   height: double.infinity,
                   child: Center(
                       child: Text(
-                    snapshot.error.toString(),
+                    "Couldn't Find City: $city",
                     style: const TextStyle(fontSize: 25, color: Colors.white),
                   )));
             } else if (snapshot.hasData) {
@@ -91,6 +122,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => WeatherDetailsScreen(
+                                city: city,
+                                index: index.toString(),
                                 dayWeather: WeatherBloc.instance
                                     .getDayWeather(WeatherBloc.instance.tempList!.value[index].dtTxt),
                                 date: '${WeatherBloc.instance.dateList!.value[index]}',
@@ -112,16 +145,29 @@ class _WeatherScreenState extends State<WeatherScreen> {
                               : const Text(''),
                         ),
                         subtitle: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
+                            const Spacer(),
                             snapshot.data != null
-                                ? Text(
-                                    '${(WeatherBloc.instance.tempList!.value[index].main.temp - 273.15).round().toString()}\u2103 ',
-                                    style: textStyle())
+                                ? Expanded(
+                                    child: Text(
+                                        '${(WeatherBloc.instance.tempList!.value[index].main.temp - 273.15).round().toString()}\u2103 ',
+                                      style: textStyle()),
+                                  )
                                 : const Text(''),
+                            Expanded(
+                              child: Hero(
+                                  tag: city + index.toString(),
+                                  child: Material(
+                                      type: MaterialType.transparency,
+                                      child: Text(city.capitalize(), style: textStyle()))),
+                            ),
                             snapshot.data != null
-                                ? Text(WeatherBloc.instance.tempList!.value[index].weather[0].main, style: textStyle())
-                                : const Text('')
+                                ? Expanded(
+                                    child: Text(WeatherBloc.instance.tempList!.value[index].weather[0].main,
+                                        style: textStyle()))
+                                : const Text(''),
+                            const Spacer(),
+
                           ],
                         ),
                       ),

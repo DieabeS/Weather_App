@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:weather_quiz_app/models/city/city.dart';
-import 'package:weather_quiz_app/models/weather_object/weather_object.dart';
+import 'package:weather_app/models/city/city.dart';
+import 'package:weather_app/models/weather_object/weather_object.dart';
 part 'weather_response.g.dart';
 
 @JsonSerializable()
